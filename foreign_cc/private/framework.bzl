@@ -173,6 +173,10 @@ CC_EXTERNAL_RULE_ATTRIBUTES = {
         ),
         mandatory = False,
     ),
+    "prefix_script": attr.string(
+        doc = "Optional part of the shell script to be added before the make commands",
+        mandatory = False,
+    ),
     "postfix_script": attr.string(
         doc = "Optional part of the shell script to be added after the make commands",
         mandatory = False,
@@ -392,6 +396,10 @@ def cc_external_rule_impl(ctx, attrs):
 
     env_prelude = get_env_prelude(ctx, lib_name, data_dependencies, target_root)
 
+    prefix_script = [attrs.prefix_script]
+    if not attrs.prefix_script:
+        prefix_script = []
+
     postfix_script = [attrs.postfix_script]
     if not attrs.postfix_script:
         postfix_script = []
@@ -410,7 +418,7 @@ def cc_external_rule_impl(ctx, attrs):
         "##mkdirs## $$EXT_BUILD_DEPS$$",
     ] + _print_env() + _copy_deps_and_tools(inputs) + [
         "cd $$BUILD_TMPDIR$$",
-    ] + attrs.create_configure_script(ConfigureParameters(ctx = ctx, attrs = attrs, inputs = inputs)) + postfix_script + [
+    ] + prefix_script + attrs.create_configure_script(ConfigureParameters(ctx = ctx, attrs = attrs, inputs = inputs)) + postfix_script + [
         # replace references to the root directory when building ($BUILD_TMPDIR)
         # and the root where the dependencies were installed ($EXT_BUILD_DEPS)
         # for the results which are in $INSTALLDIR (with placeholder)
